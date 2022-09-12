@@ -157,4 +157,11 @@ def create_trainer(
     )
     trainer.extend(ext, trigger=trigger_eval)
 
+    trigger_25k = (25000, "iteration")
+    ext = extensions.snapshot_object(
+        trainer,
+        filename="trainer_{.updater.iteration}.pth",
+    )
+    trainer.extend(ext, trigger=trigger_25k)
+
     return trainer
