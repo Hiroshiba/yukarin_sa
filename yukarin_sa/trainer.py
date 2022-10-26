@@ -16,7 +16,12 @@ from yukarin_sa.evaluator import GenerateEvaluator
 from yukarin_sa.generator import Generator
 from yukarin_sa.model import Model
 from yukarin_sa.network.predictor import create_predictor
-from yukarin_sa.utility.pytorch_utility import AmpUpdater, init_weights, make_optimizer
+from yukarin_sa.utility.pytorch_utility import (
+    AmpUpdater,
+    init_weights,
+    make_optimizer,
+    tensor_overwrite,
+)
 from yukarin_sa.utility.trainer_extension import TensorboardReport, WandbReport
 from yukarin_sa.utility.trainer_utility import LowValueTrigger, create_iterator
 
@@ -45,6 +50,17 @@ def create_trainer(
             config.train.pretrained_predictor_path, map_location=device
         )
         state_dict["speaker_embedder.weight"] = predictor.speaker_embedder.weight
+
+        assert config.network.encoder_type == "gru"
+        state_dict["encoder.rnn.weight_ih_l0"] = tensor_overwrite(
+            state_dict["encoder.rnn.weight_ih_l0"],
+            predictor.encoder.rnn.weight_ih_l0,
+        )
+        state_dict["encoder.rnn.weight_ih_l0_reverse"] = tensor_overwrite(
+            state_dict["encoder.rnn.weight_ih_l0_reverse"],
+            predictor.encoder.rnn.weight_ih_l0_reverse,
+        )
+
         predictor.load_state_dict(state_dict)
     model.to(device)
 

@@ -100,3 +100,11 @@ class AmpUpdater(StandardUpdater):
     def load_state_dict(self, state_dict):
         super().load_state_dict(state_dict)
         self.scaler.load_state_dict(state_dict["scaler"])
+
+
+def tensor_overwrite(a: torch.Tensor, b: torch.Tensor):
+    assert a.ndim == b.ndim == 2
+    if a.shape != b.shape:
+        with torch.no_grad():
+            b[:, : a.shape[1]] = a
+    return b
