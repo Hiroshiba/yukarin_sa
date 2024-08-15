@@ -3,15 +3,15 @@ from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Type, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy
-from acoustic_feature_extractor.data.phoneme import BasePhoneme, phoneme_type_to_class
-from acoustic_feature_extractor.data.sampling_data import SamplingData
 from torch.utils.data._utils.collate import default_convert
 from torch.utils.data.dataset import ConcatDataset, Dataset
 
 from yukarin_sa.config import DatasetConfig
+from yukarin_sa.data.phoneme import OjtPhoneme
+from yukarin_sa.data.sampling_data import SamplingData
 
 unvoiced_mora_phoneme_list = ["A", "I", "U", "E", "O", "cl", "pau"]
 mora_phoneme_list = ["a", "i", "u", "e", "o", "N"] + unvoiced_mora_phoneme_list
@@ -49,19 +49,19 @@ def f0_mean(
     return output
 
 
-def split_mora(phoneme_list: List[BasePhoneme]):
+def split_mora(phoneme_list: List[OjtPhoneme]):
     vowel_indexes = [
         i for i, p in enumerate(phoneme_list) if p.phoneme in mora_phoneme_list
     ]
     vowel_phoneme_list = [phoneme_list[i] for i in vowel_indexes]
-    consonant_phoneme_list: List[Optional[BasePhoneme]] = [None] + [
+    consonant_phoneme_list: List[Optional[OjtPhoneme]] = [None] + [
         None if post - prev == 1 else phoneme_list[post - 1]
         for prev, post in zip(vowel_indexes[:-1], vowel_indexes[1:])
     ]
     return consonant_phoneme_list, vowel_phoneme_list, vowel_indexes
 
 
-def voiced_consonant_f0_mora(phoneme_list: List[BasePhoneme], f0: numpy.ndarray):
+def voiced_consonant_f0_mora(phoneme_list: List[OjtPhoneme], f0: numpy.ndarray):
     vowel_indexes = [
         i for i, p in enumerate(phoneme_list) if p.phoneme in mora_phoneme_list
     ]
@@ -82,7 +82,7 @@ def voiced_consonant_f0_mora(phoneme_list: List[BasePhoneme], f0: numpy.ndarray)
 
 @dataclass
 class Input:
-    phoneme_list: List[BasePhoneme]
+    phoneme_list: List[OjtPhoneme]
     start_accent_list: numpy.ndarray
     end_accent_list: numpy.ndarray
     start_accent_phrase_list: numpy.ndarray
@@ -100,11 +100,10 @@ class LazyInput:
     end_accent_phrase_list_path: Path
     f0_path: Path
     volume_path: Optional[Path]
-    phoneme_class: Type[BasePhoneme]
 
     def generate(self):
         return Input(
-            phoneme_list=self.phoneme_class.load_julius_list(self.phoneme_list_path),
+            phoneme_list=OjtPhoneme.load_julius_list(self.phoneme_list_path),
             start_accent_list=numpy.array(
                 [bool(int(s)) for s in self.start_accent_list_path.read_text().split()]
             ),
@@ -157,7 +156,7 @@ class FeatureDataset(Dataset):
 
     @staticmethod
     def extract_input(
-        phoneme_list_data: List[BasePhoneme],
+        phoneme_list_data: List[OjtPhoneme],
         start_accent_list: numpy.ndarray,
         end_accent_list: numpy.ndarray,
         start_accent_phrase_list: numpy.ndarray,
@@ -409,7 +408,6 @@ def create_dataset(config: DatasetConfig):
                 end_accent_phrase_list_path=end_accent_phrase_list_paths[fn],
                 f0_path=f0_paths[fn],
                 volume_path=volume_paths[fn],
-                phoneme_class=phoneme_type_to_class[config.phoneme_type],
             )
             for fn in fns
         ]
@@ -530,7 +528,6 @@ def create_validation_dataset(config: DatasetConfig):
             end_accent_phrase_list_path=end_accent_phrase_list_paths[fn],
             f0_path=f0_paths[fn],
             volume_path=volume_paths[fn],
-            phoneme_class=phoneme_type_to_class[config.phoneme_type],
         )
         for fn in valids
     ]

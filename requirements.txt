@@ -1,6 +1,7 @@
 numpy
+scipy
+librosa
 pyyaml
 torch
 torch_optimizer
 tqdm
-git+https://github.com/Hiroshiba/acoustic_feature_extractor
