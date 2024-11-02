@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from os import PathLike
 from pathlib import Path
 from typing import List, Sequence
 
@@ -73,8 +74,10 @@ class BasePhoneme(object):
             assert pre.end == post.start, f"{pre} and {post} must be continuous."
 
     @classmethod
-    def load_julius_list(cls, path: Path, verify=True):
-        phonemes = [cls.parse(s) for s in path.read_text().split("\n") if len(s) > 0]
+    def load_julius_list(cls, path: PathLike, verify=True):
+        phonemes = [
+            cls.parse(s) for s in Path(path).read_text().split("\n") if len(s) > 0
+        ]
         phonemes = cls.convert(phonemes)
 
         if verify:
@@ -86,7 +89,9 @@ class BasePhoneme(object):
         return phonemes
 
     @classmethod
-    def save_julius_list(cls, phonemes: List["BasePhoneme"], path: Path, verify=True):
+    def save_julius_list(
+        cls, phonemes: List["BasePhoneme"], path: PathLike, verify=True
+    ):
         if verify:
             try:
                 cls.verify_list(phonemes)
@@ -102,7 +107,7 @@ class BasePhoneme(object):
                 for p in phonemes
             ]
         )
-        path.write_text(text)
+        Path(path).write_text(text)
 
 
 class OjtPhoneme(BasePhoneme):

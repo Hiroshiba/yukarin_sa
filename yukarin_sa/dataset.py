@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from glob import glob
+from os import PathLike
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
@@ -12,6 +13,7 @@ from torch.utils.data.dataset import ConcatDataset, Dataset
 from yukarin_sa.config import DatasetConfig
 from yukarin_sa.data.phoneme import OjtPhoneme
 from yukarin_sa.data.sampling_data import SamplingData
+from yukarin_sa.utility.dataset_utility import CachePath
 
 unvoiced_mora_phoneme_list = ["A", "I", "U", "E", "O", "cl", "pau"]
 mora_phoneme_list = ["a", "i", "u", "e", "o", "N"] + unvoiced_mora_phoneme_list
@@ -93,33 +95,33 @@ class Input:
 
 @dataclass
 class LazyInput:
-    phoneme_list_path: Path
-    start_accent_list_path: Path
-    end_accent_list_path: Path
-    start_accent_phrase_list_path: Path
-    end_accent_phrase_list_path: Path
-    f0_path: Path
-    volume_path: Optional[Path]
+    phoneme_list_path: PathLike
+    start_accent_list_path: PathLike
+    end_accent_list_path: PathLike
+    start_accent_phrase_list_path: PathLike
+    end_accent_phrase_list_path: PathLike
+    f0_path: PathLike
+    volume_path: Optional[PathLike]
 
     def generate(self):
         return Input(
-            phoneme_list=OjtPhoneme.load_julius_list(self.phoneme_list_path),
+            phoneme_list=OjtPhoneme.load_julius_list(self.phoneme_list_path, verify=False), # TODO: verify=Trueにする
             start_accent_list=numpy.array(
-                [bool(int(s)) for s in self.start_accent_list_path.read_text().split()]
+                [bool(int(s)) for s in Path(self.start_accent_list_path).read_text().split()]
             ),
             end_accent_list=numpy.array(
-                [bool(int(s)) for s in self.end_accent_list_path.read_text().split()]
+                [bool(int(s)) for s in Path(self.end_accent_list_path).read_text().split()]
             ),
             start_accent_phrase_list=numpy.array(
                 [
                     bool(int(s))
-                    for s in self.start_accent_phrase_list_path.read_text().split()
+                    for s in Path(self.start_accent_phrase_list_path).read_text().split()
                 ]
             ),
             end_accent_phrase_list=numpy.array(
                 [
                     bool(int(s))
-                    for s in self.end_accent_phrase_list_path.read_text().split()
+                    for s in Path(self.end_accent_phrase_list_path).read_text().split()
                 ]
             ),
             f0=SamplingData.load(self.f0_path),
@@ -401,13 +403,13 @@ def create_dataset(config: DatasetConfig):
     def _dataset(fns, for_test=False):
         inputs = [
             LazyInput(
-                phoneme_list_path=phoneme_list_paths[fn],
-                start_accent_list_path=start_accent_list_paths[fn],
-                end_accent_list_path=end_accent_list_paths[fn],
-                start_accent_phrase_list_path=start_accent_phrase_list_paths[fn],
-                end_accent_phrase_list_path=end_accent_phrase_list_paths[fn],
-                f0_path=f0_paths[fn],
-                volume_path=volume_paths[fn],
+                phoneme_list_path=CachePath(phoneme_list_paths[fn]),
+                start_accent_list_path=CachePath(start_accent_list_paths[fn]),
+                end_accent_list_path=CachePath(end_accent_list_paths[fn]),
+                start_accent_phrase_list_path=CachePath(start_accent_phrase_list_paths[fn]),
+                end_accent_phrase_list_path=CachePath(end_accent_phrase_list_paths[fn]),
+                f0_path=CachePath(f0_paths[fn]),
+                volume_path=CachePath(volume_paths[fn]),
             )
             for fn in fns
         ]
@@ -521,13 +523,13 @@ def create_validation_dataset(config: DatasetConfig):
 
     inputs = [
         LazyInput(
-            phoneme_list_path=phoneme_list_paths[fn],
-            start_accent_list_path=start_accent_list_paths[fn],
-            end_accent_list_path=end_accent_list_paths[fn],
-            start_accent_phrase_list_path=start_accent_phrase_list_paths[fn],
-            end_accent_phrase_list_path=end_accent_phrase_list_paths[fn],
-            f0_path=f0_paths[fn],
-            volume_path=volume_paths[fn],
+            phoneme_list_path=CachePath(phoneme_list_paths[fn]),
+            start_accent_list_path=CachePath(start_accent_list_paths[fn]),
+            end_accent_list_path=CachePath(end_accent_list_paths[fn]),
+            start_accent_phrase_list_path=CachePath(start_accent_phrase_list_paths[fn]),
+            end_accent_phrase_list_path=CachePath(end_accent_phrase_list_paths[fn]),
+            f0_path=CachePath(f0_paths[fn]),
+            volume_path=CachePath(volume_paths[fn]),
         )
         for fn in valids
     ]
