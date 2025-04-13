@@ -1,7 +1,0 @@
-numpy
-scipy
-librosa
-pyyaml
-torch
-torch_optimizer
-tqdm

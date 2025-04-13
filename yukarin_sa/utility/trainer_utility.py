@@ -7,7 +7,6 @@ from pytorch_trainer.iterators import (
     SerialIterator,
 )
 from pytorch_trainer.training.util import get_trigger
-from torch._six import container_abcs
 from torch.utils.data import Dataset
 
 
