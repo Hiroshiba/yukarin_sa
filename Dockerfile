@@ -13,12 +13,6 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# optuna
-RUN apt-get update && \
-    apt-get install -y gcc mysql-client python3-dev libmysqlclient-dev && \
-    apt-get clean && \
-    pip install optuna mysqlclient
-
 # install requirements
 COPY --from=ghcr.io/astral-sh/uv:0.6.14 /uv /uvx /bin/
 COPY pyproject.toml /app/
