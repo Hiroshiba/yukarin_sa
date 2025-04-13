@@ -807,7 +807,7 @@ wheels = [
 [[package]]
 name = "yukarin-sa"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "librosa" },
     { name = "numpy" },
