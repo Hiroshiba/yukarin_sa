@@ -118,3 +118,25 @@ def backward_compatible(d: Dict[str, Any]):
 
     if "phoneme_type" not in d["dataset"]:
         d["dataset"]["phoneme_type"] = "jvs"
+
+    if "root_dir" not in d["dataset"]:
+        d["dataset"]["root_dir"] = Path(".")
+    for before_key in [
+        "phoneme_list_glob",
+        "start_accent_list_glob",
+        "end_accent_list_glob",
+        "start_accent_phrase_list_glob",
+        "end_accent_phrase_list_glob",
+        "f0_glob",
+        "volume_glob",
+        "valid_phoneme_list_glob",
+        "valid_start_accent_list_glob",
+        "valid_end_accent_list_glob",
+        "valid_start_accent_phrase_list_glob",
+        "valid_end_accent_phrase_list_glob",
+        "valid_f0_glob",
+        "valid_volume_glob",
+    ]:
+        if before_key in d["dataset"]:
+            after_key = before_key.replace("_glob", "_pathlist_path")
+            d["dataset"][after_key] = d["dataset"].pop(before_key)
