@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
 from enum import Enum
-from glob import glob
 from os import PathLike
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
@@ -105,17 +104,27 @@ class LazyInput:
 
     def generate(self):
         return Input(
-            phoneme_list=OjtPhoneme.load_julius_list(self.phoneme_list_path, verify=False), # TODO: verify=Trueにする
+            phoneme_list=OjtPhoneme.load_julius_list(
+                self.phoneme_list_path, verify=False
+            ),  # TODO: verify=Trueにする
             start_accent_list=numpy.array(
-                [bool(int(s)) for s in Path(self.start_accent_list_path).read_text().split()]
+                [
+                    bool(int(s))
+                    for s in Path(self.start_accent_list_path).read_text().split()
+                ]
             ),
             end_accent_list=numpy.array(
-                [bool(int(s)) for s in Path(self.end_accent_list_path).read_text().split()]
+                [
+                    bool(int(s))
+                    for s in Path(self.end_accent_list_path).read_text().split()
+                ]
             ),
             start_accent_phrase_list=numpy.array(
                 [
                     bool(int(s))
-                    for s in Path(self.start_accent_phrase_list_path).read_text().split()
+                    for s in Path(self.start_accent_phrase_list_path)
+                    .read_text()
+                    .split()
                 ]
             ),
             end_accent_phrase_list=numpy.array(
@@ -349,35 +358,42 @@ class TensorWrapperDataset(Dataset):
         return default_convert(self.dataset[i])
 
 
+def _load_pathlist(path: Path, root_dir: Path) -> Dict[str, Path]:
+    path_list = [root_dir / p for p in path.read_text().splitlines()]
+    return {p.stem: p for p in path_list}
+
+
 def create_dataset(config: DatasetConfig):
-    phoneme_list_paths = {Path(p).stem: Path(p) for p in glob(config.phoneme_list_glob)}
+    phoneme_list_paths = _load_pathlist(
+        config.phoneme_list_pathlist_path, config.root_dir
+    )
     fn_list = sorted(phoneme_list_paths.keys())
     assert len(fn_list) > 0
 
-    start_accent_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.start_accent_list_glob)
-    }
+    start_accent_list_paths = _load_pathlist(
+        config.start_accent_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(start_accent_list_paths.keys())
 
-    end_accent_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.end_accent_list_glob)
-    }
+    end_accent_list_paths = _load_pathlist(
+        config.end_accent_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(end_accent_list_paths.keys())
 
-    start_accent_phrase_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.start_accent_phrase_list_glob)
-    }
+    start_accent_phrase_list_paths = _load_pathlist(
+        config.start_accent_phrase_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(start_accent_phrase_list_paths.keys())
 
-    end_accent_phrase_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.end_accent_phrase_list_glob)
-    }
+    end_accent_phrase_list_paths = _load_pathlist(
+        config.end_accent_phrase_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(end_accent_phrase_list_paths.keys())
 
-    f0_paths = {Path(p).stem: Path(p) for p in glob(config.f0_glob)}
+    f0_paths = _load_pathlist(config.f0_pathlist_path, config.root_dir)
     assert set(fn_list) == set(f0_paths.keys())
 
-    volume_paths = {Path(p).stem: Path(p) for p in glob(config.volume_glob)}
+    volume_paths = _load_pathlist(config.volume_pathlist_path, config.root_dir)
     assert set(fn_list) == set(volume_paths.keys())
 
     speaker_ids: Optional[Dict[str, int]] = None
@@ -406,7 +422,9 @@ def create_dataset(config: DatasetConfig):
                 phoneme_list_path=CachePath(phoneme_list_paths[fn]),
                 start_accent_list_path=CachePath(start_accent_list_paths[fn]),
                 end_accent_list_path=CachePath(end_accent_list_paths[fn]),
-                start_accent_phrase_list_path=CachePath(start_accent_phrase_list_paths[fn]),
+                start_accent_phrase_list_path=CachePath(
+                    start_accent_phrase_list_paths[fn]
+                ),
                 end_accent_phrase_list_path=CachePath(end_accent_phrase_list_paths[fn]),
                 f0_path=CachePath(f0_paths[fn]),
                 volume_path=CachePath(volume_paths[fn]),
@@ -464,44 +482,44 @@ def create_dataset(config: DatasetConfig):
 
 
 def create_validation_dataset(config: DatasetConfig):
-    assert config.valid_phoneme_list_glob is not None
-    assert config.valid_start_accent_list_glob is not None
-    assert config.valid_end_accent_list_glob is not None
-    assert config.valid_start_accent_phrase_list_glob is not None
-    assert config.valid_end_accent_phrase_list_glob is not None
-    assert config.valid_f0_glob is not None
-    assert config.valid_volume_glob is not None
+    assert config.valid_phoneme_list_pathlist_path is not None
+    assert config.valid_start_accent_list_pathlist_path is not None
+    assert config.valid_end_accent_list_pathlist_path is not None
+    assert config.valid_start_accent_phrase_list_pathlist_path is not None
+    assert config.valid_end_accent_phrase_list_pathlist_path is not None
+    assert config.valid_f0_pathlist_path is not None
+    assert config.valid_volume_pathlist_path is not None
 
-    phoneme_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.valid_phoneme_list_glob)
-    }
+    phoneme_list_paths = _load_pathlist(
+        config.valid_phoneme_list_pathlist_path, config.root_dir
+    )
     fn_list = sorted(phoneme_list_paths.keys())
     assert len(fn_list) > 0
 
-    start_accent_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.valid_start_accent_list_glob)
-    }
+    start_accent_list_paths = _load_pathlist(
+        config.valid_start_accent_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(start_accent_list_paths.keys())
 
-    end_accent_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.valid_end_accent_list_glob)
-    }
+    end_accent_list_paths = _load_pathlist(
+        config.valid_end_accent_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(end_accent_list_paths.keys())
 
-    start_accent_phrase_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.valid_start_accent_phrase_list_glob)
-    }
+    start_accent_phrase_list_paths = _load_pathlist(
+        config.valid_start_accent_phrase_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(start_accent_phrase_list_paths.keys())
 
-    end_accent_phrase_list_paths = {
-        Path(p).stem: Path(p) for p in glob(config.valid_end_accent_phrase_list_glob)
-    }
+    end_accent_phrase_list_paths = _load_pathlist(
+        config.valid_end_accent_phrase_list_pathlist_path, config.root_dir
+    )
     assert set(fn_list) == set(end_accent_phrase_list_paths.keys())
 
-    f0_paths = {Path(p).stem: Path(p) for p in glob(config.valid_f0_glob)}
+    f0_paths = _load_pathlist(config.valid_f0_pathlist_path, config.root_dir)
     assert set(fn_list) == set(f0_paths.keys())
 
-    volume_paths = {Path(p).stem: Path(p) for p in glob(config.valid_volume_glob)}
+    volume_paths = _load_pathlist(config.valid_volume_pathlist_path, config.root_dir)
     assert set(fn_list) == set(volume_paths.keys())
 
     speaker_ids: Optional[Dict[str, int]] = None

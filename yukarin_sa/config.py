@@ -8,13 +8,14 @@ from yukarin_sa.utility.git_utility import get_branch_name, get_commit_id
 
 @dataclass
 class DatasetConfig:
-    phoneme_list_glob: str
-    start_accent_list_glob: str
-    end_accent_list_glob: str
-    start_accent_phrase_list_glob: str
-    end_accent_phrase_list_glob: str
-    f0_glob: str
-    volume_glob: str
+    root_dir: Path
+    phoneme_list_pathlist_path: Path
+    start_accent_list_pathlist_path: Path
+    end_accent_list_pathlist_path: Path
+    start_accent_phrase_list_pathlist_path: Path
+    end_accent_phrase_list_pathlist_path: Path
+    f0_pathlist_path: Path
+    volume_pathlist_path: Path
     sampling_length: int
     f0_process_mode: str
     phoneme_type: str
@@ -28,13 +29,13 @@ class DatasetConfig:
     speaker_size: Optional[int]
     test_num: int
     test_trial_num: int = 1
-    valid_phoneme_list_glob: Optional[str] = None
-    valid_start_accent_list_glob: Optional[str] = None
-    valid_end_accent_list_glob: Optional[str] = None
-    valid_start_accent_phrase_list_glob: Optional[str] = None
-    valid_end_accent_phrase_list_glob: Optional[str] = None
-    valid_f0_glob: Optional[str] = None
-    valid_volume_glob: Optional[str] = None
+    valid_phoneme_list_pathlist_path: Optional[Path] = None
+    valid_start_accent_list_pathlist_path: Optional[Path] = None
+    valid_end_accent_list_pathlist_path: Optional[Path] = None
+    valid_start_accent_phrase_list_pathlist_path: Optional[Path] = None
+    valid_end_accent_phrase_list_pathlist_path: Optional[Path] = None
+    valid_f0_pathlist_path: Optional[Path] = None
+    valid_volume_pathlist_path: Optional[Path] = None
     valid_speaker_dict_path: Optional[Path] = None
     valid_trial_num: Optional[int] = None
     valid_num: Optional[int] = None
